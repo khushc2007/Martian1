@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 
@@ -9,7 +8,6 @@ export default function Page() {
   const [needsPermission, setNeedsPermission] = useState(false)
   const [gyroActive, setGyroActive] = useState(false)
   const [shouldAnimate, setShouldAnimate] = useState(false)
-  const [animationComplete, setAnimationComplete] = useState(false)
   const frameRef = useRef<number>()
   const lastMouseRef = useRef<number>(0)
   const lastUpdateRef = useRef<number>(0)
@@ -35,7 +33,6 @@ export default function Page() {
   }
 
   useEffect(() => {
-    // Throttled mouse handler — 32ms ≈ 30fps cap
     const handleMouseMove = (e: MouseEvent) => {
       const now = Date.now()
       if (now - lastMouseRef.current < 32) return
@@ -49,9 +46,7 @@ export default function Page() {
       const now = Date.now()
       if (now - lastUpdateRef.current < 32) return
       lastUpdateRef.current = now
-
       if (frameRef.current) cancelAnimationFrame(frameRef.current)
-
       frameRef.current = requestAnimationFrame(() => {
         const isLandscape = window.innerWidth > window.innerHeight
         let x = 0
@@ -94,8 +89,7 @@ export default function Page() {
   }, [gyroActive])
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimationComplete(true), 4000)
-    return () => clearTimeout(timer)
+    setShouldAnimate(true)
   }, [])
 
   return (
@@ -111,10 +105,11 @@ export default function Page() {
         </div>
       )}
 
-      {/* Layer 1 — background */}
+      {/* Layer 1 */}
       <div
-        className={`absolute inset-0 ${shouldAnimate ? "zoom-layer-1" : ""}`}
+        className={shouldAnimate ? "zoom-layer-1" : ""}
         style={{
+          position: "absolute",
           transform: `translate3d(${mousePosition.x * 30}px, ${mousePosition.y * 30}px, 0)`,
           width: "130%",
           height: "130%",
@@ -122,13 +117,15 @@ export default function Page() {
           top: "-15%",
         }}
       >
-        <Image src="/images/mars-1.png" alt="Background layer" fill className="object-cover" priority />
+        <img src="/images/mars-1.png" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
 
-      {/* Layer 2 — starship */}
+      {/* Starship */}
       <div
-        className={`absolute z-5 ${shouldAnimate ? "zoom-layer-starship" : ""}`}
+        className={shouldAnimate ? "zoom-layer-starship" : ""}
         style={{
+          position: "absolute",
+          zIndex: 5,
           transform: `translate3d(${mousePosition.x * 50}px, ${mousePosition.y * 50}px, 0) scale(0.75)`,
           width: "800px",
           height: "800px",
@@ -136,13 +133,15 @@ export default function Page() {
           top: "20px",
         }}
       >
-        <Image src="/images/starship.png" alt="Starship" fill className="object-contain" />
+        <img src="/images/starship.png" alt="" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
       </div>
 
-      {/* Layer 3 — mid */}
+      {/* Layer 2 */}
       <div
-        className={`absolute inset-0 z-10 ${shouldAnimate ? "zoom-layer-2" : ""}`}
+        className={shouldAnimate ? "zoom-layer-2" : ""}
         style={{
+          position: "absolute",
+          zIndex: 10,
           transform: `translate3d(${mousePosition.x * 60}px, ${mousePosition.y * 60}px, 0)`,
           width: "130%",
           height: "130%",
@@ -150,51 +149,59 @@ export default function Page() {
           top: "-15%",
         }}
       >
-        <Image src="/images/mars-2.png" alt="Mid layer" fill className="object-cover" />
+        <img src="/images/mars-2.png" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
 
-      {/* Text + UI layer */}
+      {/* Text + UI */}
       <div
-        className={`absolute inset-0 flex flex-col items-center justify-center z-10 px-6 ${shouldAnimate ? "zoom-layer-text" : ""}`}
+        className={shouldAnimate ? "zoom-layer-text" : ""}
         style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 15,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 1.5rem",
           transform: `translate3d(${mousePosition.x * 90}px, ${mousePosition.y * 90}px, 0)`,
           perspective: "1000px",
         }}
       >
-        {/* WATER-IQ title */}
-        <div className="flex text-[64px] sm:text-[100px] md:text-[140px] lg:text-[180px] leading-none">
-          {"WATER-IQ".split("").map((letter, index) => (
+        <div style={{ display: "flex", fontSize: "clamp(52px, 12vw, 180px)", lineHeight: 1 }}>
+          {"WATER·IQ".split("").map((letter, index) => (
             <span
               key={index}
-              className={`font-bold text-white ${shouldAnimate ? "letter-rotate" : ""}`}
+              className={shouldAnimate ? "letter-rotate" : ""}
               style={{
                 display: "inline-block",
+                fontWeight: 700,
+                color: "white",
                 transformStyle: "preserve-3d",
                 animationDelay: `${index * 0.04}s`,
               }}
             >
-              {letter === "-" ? <span style={{ letterSpacing: "-0.02em" }}>·</span> : letter}
+              {letter}
             </span>
           ))}
         </div>
 
-        {/* Subtitle */}
         <p
-          className={`mt-3 text-white/40 text-xs sm:text-sm font-mono tracking-[0.25em] uppercase ${shouldAnimate ? "fade-in-sub" : "opacity-0"}`}
+          className={shouldAnimate ? "fade-in-sub" : ""}
+          style={{ opacity: 0, marginTop: "0.75rem", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", fontFamily: "monospace", letterSpacing: "0.25em", textTransform: "uppercase" }}
         >
           Developed by Khush &amp; Co.
         </p>
 
-        {/* Icons */}
         <div
-          className={`mt-6 flex items-center gap-6 ${shouldAnimate ? "fade-in-icons" : "opacity-0"}`}
+          className={shouldAnimate ? "fade-in-icons" : ""}
+          style={{ opacity: 0, marginTop: "1.5rem", display: "flex", alignItems: "center", gap: "1.5rem" }}
         >
-          {/* GitHub */}
           <a
             href="https://github.com/khushc2007"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/50 hover:text-white/90 transition-colors duration-200"
+            className="icon-link"
             aria-label="GitHub"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -202,12 +209,11 @@ export default function Page() {
             </svg>
           </a>
 
-          {/* Globe / link */}
           <a
             href="#"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/50 hover:text-white/90 transition-colors duration-200"
+            className="icon-link"
             aria-label="Website"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -217,19 +223,21 @@ export default function Page() {
           </a>
         </div>
 
-        {/* Proceed button */}
         <button
           onClick={() => router.push("/video")}
-          className={`mt-8 px-8 py-2.5 border border-white/25 text-white/70 text-xs font-mono tracking-[0.2em] uppercase rounded-full hover:border-white/60 hover:text-white hover:bg-white/5 transition-all duration-300 ${shouldAnimate ? "fade-in-btn" : "opacity-0"}`}
+          className={`proceed-btn${shouldAnimate ? " fade-in-btn" : ""}`}
+          style={{ opacity: 0, marginTop: "2rem" }}
         >
           Proceed
         </button>
       </div>
 
-      {/* Layer 4 — foreground */}
+      {/* Layer 3 foreground */}
       <div
-        className={`absolute inset-0 z-20 ${shouldAnimate ? "zoom-layer-3" : ""}`}
+        className={shouldAnimate ? "zoom-layer-3" : ""}
         style={{
+          position: "absolute",
+          zIndex: 20,
           transform: `translate3d(${mousePosition.x * 120}px, ${mousePosition.y * 120}px, 0)`,
           width: "110%",
           height: "110%",
@@ -237,34 +245,18 @@ export default function Page() {
           top: "calc(-5% + 150px)",
         }}
       >
-        <Image src="/images/mars-3.png" alt="Foreground layer" fill className="object-cover" />
+        <img src="/images/mars-3.png" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
 
       <style jsx>{`
-        .zoom-layer-1 {
-          animation: zoomOut1 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .zoom-layer-starship {
-          animation: zoomOutStarship 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .zoom-layer-2 {
-          animation: zoomOut2 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .zoom-layer-3 {
-          animation: zoomOut3 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .zoom-layer-text {
-          animation: zoomOutText 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
+        .zoom-layer-1 { animation: zoomOut1 8s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .zoom-layer-starship { animation: zoomOutStarship 8s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .zoom-layer-2 { animation: zoomOut2 8s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .zoom-layer-3 { animation: zoomOut3 8s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .zoom-layer-text { animation: zoomOutText 8s cubic-bezier(0.4,0,0.2,1) forwards; }
 
-        @keyframes zoomOut1 {
-          0% { scale: 1.3; }
-          100% { scale: 1; }
-        }
-        @keyframes zoomOutStarship {
-          0% { scale: 1.5; }
-          100% { scale: 0.75; }
-        }
+        @keyframes zoomOut1 { 0% { scale: 1.3; } 100% { scale: 1; } }
+        @keyframes zoomOutStarship { 0% { scale: 1.5; } 100% { scale: 0.75; } }
         @keyframes zoomOut2 {
           0% { scale: 2.5; filter: blur(20px); }
           50% { filter: blur(10px); }
@@ -283,9 +275,7 @@ export default function Page() {
           100% { scale: 1; opacity: 1; }
         }
 
-        .letter-rotate {
-          animation: rotateText 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
+        .letter-rotate { animation: rotateText 8s cubic-bezier(0.4,0,0.2,1) forwards; }
         @keyframes rotateText {
           0% { transform: rotateY(90deg); filter: blur(30px); opacity: 0; }
           40% { filter: blur(15px); opacity: 0.5; }
@@ -293,24 +283,34 @@ export default function Page() {
           100% { transform: rotateY(0deg); filter: blur(0px); opacity: 1; }
         }
 
-        .fade-in-sub {
-          animation: fadeInUp 0.8s ease forwards;
-          animation-delay: 3s;
-          opacity: 0;
-        }
-        .fade-in-icons {
-          animation: fadeInUp 0.8s ease forwards;
-          animation-delay: 3.3s;
-          opacity: 0;
-        }
-        .fade-in-btn {
-          animation: fadeInUp 0.8s ease forwards;
-          animation-delay: 3.6s;
-          opacity: 0;
-        }
+        .fade-in-sub { animation: fadeInUp 0.8s ease forwards; animation-delay: 3s; }
+        .fade-in-icons { animation: fadeInUp 0.8s ease forwards; animation-delay: 3.3s; }
+        .fade-in-btn { animation: fadeInUp 0.8s ease forwards; animation-delay: 3.6s; }
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        .icon-link { color: rgba(255,255,255,0.5); transition: color 0.2s; }
+        .icon-link:hover { color: rgba(255,255,255,0.9); }
+
+        .proceed-btn {
+          padding: 0.6rem 2rem;
+          border: 1px solid rgba(255,255,255,0.25);
+          color: rgba(255,255,255,0.7);
+          font-family: monospace;
+          font-size: 0.7rem;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          border-radius: 9999px;
+          background: transparent;
+          cursor: pointer;
+          transition: border-color 0.3s, color 0.3s, background 0.3s;
+        }
+        .proceed-btn:hover {
+          border-color: rgba(255,255,255,0.6);
+          color: white;
+          background: rgba(255,255,255,0.05);
         }
       `}</style>
     </div>
